@@ -1,13 +1,10 @@
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-   "http://www.w3.org/TR/html4/loose.dtd"> 
+<!DOCTYPE html> 
  
 <html lang="en"> 
 <head> 
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
 	<title>CryptoPass</title> 
 	<meta name="author" content="Dmitry Chestnykh"> 
-	<!-- Date: 2009-05-03 --> 
 <script type="text/javascript">
 
 /*
@@ -567,21 +564,6 @@ button:active { background: #f4f4f4 -webkit-gradient(
             <p><b>Warning:</b> Your secret should contain at least 16 chars for better security.</p> 
         </div> 
         </div>
-	</div> 
-	
-	<div id="info"> 
-		<h2>Info</h2> 
-		<p>Password generator in single HTML/JavaScript file. <em>Version 2.0</em></p> 
-		<p>Create passwords for different websites (or anything else) using a single secret key (if you lose your password for a website, you can regenerate it if you remember your secret key.)</p> 
-		<p>You can download the latest version here: <a href="http://sellme.ru/password2/">http://sellme.ru/password2/</a><br> 
-			<small>If you got it somewhere else, please verify SHA-256 of this file (original hash can be found <a href="http://sellme.ru/password2/">here</a>) to make sure nobody modified it.</small></p> 
-		<h2>Algorithm</h2> 
-		<pre><code>password = base64(pbkdf2(secret, username@url))</code></pre> 
-		<p><small>(return first <em>max password length</em> characters)<br>PBKDF2 uses SHA-256 and 5000 iterations.</small></p> 
-		
-		<p>Copyright &copy; 2010 Dmitry Chestnykh. MIT License.<br> 
-		<small>Includes portions by Jeff Mott and Dojo Foundation (BSD Licenses, see source)</small></p> 
-		<button onclick="toggleDiv('info')">Close</button> 
 	</div> 
 	
 <script>
