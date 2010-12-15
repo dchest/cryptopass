@@ -476,7 +476,7 @@ function hideDiv(id)
 }
 
 function getHostname(str) {
-	var re = new RegExp('^(?:f|ht)tp(?:s)?\://([^/]+)', 'im');
+	var re = new RegExp('^(?:f|ht)tp(?:s)?\://(?:www.)?([^/]+)', 'im');
 	return str.match(re)[1].toString();
 }
 
