@@ -396,37 +396,6 @@ C.PBKDF2 = function (password, salt, keylen, options) {
 
 })();
 
-(function(){
-    /* (c) Dojo Foundation, BSD Licensed */
-    var c = function(input, length, result){
-            var i, j, n, b = [0, 0, 0, 0, 0];
-            for(i = 0; i < length; i += 4){
-                    n = ((input[i] * 256 + input[i+1]) * 256 + input[i+2]) * 256 + input[i+3];
-                    if(!n){
-                            result.push("z");
-                    }else{
-                            for(j = 0; j < 5; b[j++] = n % 85 + 33, n = Math.floor(n / 85));
-                    }
-                    result.push(String.fromCharCode(b[4], b[3], b[2], b[1], b[0]));
-            }
-    };
-
-    Crypto.util.bytesToAscii85 = function(input) {
-        var result = [], reminder = input.length % 4, length = input.length - reminder;
-        c(input, length, result);
-        if(reminder){
-                var t = input.slice(length);
-                while(t.length < 4){ t.push(0); }
-                c(t, 4, result);
-                var x = result.pop();
-                if(x == "z"){ x = "!!!!!"; }
-                result.push(x.substr(0, reminder + 1));
-        }
-        return result.join(""); // String
-    }
-})();
-
-
 // **** Password generation ****
 
 function makePassword() {
@@ -452,7 +421,6 @@ function generatePassword()
     result_field.select();
 	return false; // don't reload page
 }
- 
 
 function toggleDiv(id)
 {
@@ -483,56 +451,68 @@ function getHostname(str) {
 function fillPassword() {
     var username = document.getElementById('username').value || "";
     chrome.tabs.executeScript(null,
-        {code:"var els = document.getElementsByTagName('input');" +
-              "for (var i=0; i < els.length; i++) {" +
-              "  if (els[i].type.toLowerCase() == 'password') { " +
-              "      els[i].value = '" + makePassword() + "';" +
-              "  } else {  " +
-              "      var name = els[i].name.toLowerCase(); " +
-              "      if (name.match(/login|username|email/)) { " +
-              "        els[i].value = '" + username + "'; " +
-              "      } " +
-              "  }  " +
-              "}"});
+        {code:"var els = document.getElementsByTagName('input'); \
+               for (var i=0; i < els.length; i++) { \
+                 if (els[i].type.toLowerCase() == 'password') { \
+                     els[i].value = '" + makePassword() + "'; \
+                 } else { \
+                     var name = els[i].name.toLowerCase(); \
+                     if (name.match(/login|username|email/)) { \
+                       els[i].value = '" + username + "'; \
+                     } \
+                 } \
+               }"});
   window.close();
 }
 
-</script> 
+</script>
+
 <style type="text/css"> 
-body { font: 10pt Helvetica, Arial, sans-serif; width: 350px; }
-h1 { font-size: 14pt; font-weight: normal; margin-bottom: 20px; font-style: italic; font-family: Georgia; color: #3C0704;}
-.label { text-align: right; padding-right: 5px;}
-#secret, #url, #username, #result { width: 100%; }
-.length, #length { font-size: 8pt; color: #666;}
-.centered { text-align: center;}
-td.input { width: 265px}
-.info-a {float:right; font: 10pt Georgia; font-style: italic; padding: 3px 8px; background-color: #ccc; -webkit-border-radius: 10px; -moz-border-radius: 10px; -khtml-border-radius: 10px; border-radius: 10px; text-decoration: none;}
-#info { display: none; margin: auto; width: 400px; margin-top: 30px; padding: 20px; background: #aaa; border: 1px solid #aaa; -webkit-border-radius: 10px; -moz-border-radius: 10px; -khtml-border-radius: 10px; border-radius: 10px; font-size: 10pt; text-shadow: #888 0 1px; color: #fff;}
-#info h2, #warning h2 { font-size: 12pt;}
-#info a { color: #E6FEFE;}
-#result-box { display: none }
-#warning { display: none; font-size: 10px; color: red}
-button { background: #f4f4f4 -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    color-stop(0, #fafafa),
-    color-stop(1, #ccc)
-    ) ; border: 1px solid #aaa; border-radius: 5px; padding: 3px 10px; margin-top: 3px;
+body {
+    font: 10pt Helvetica, Arial, sans-serif;
+    width: 350px;
+}
+.label {
+    text-align: right;
+    padding-right: 5px;
+}
+#secret, #url, #username, #result {
+    width: 100%;
+}
+.length, #length {
+    font-size: 8pt;
+    color: #666;
+}
+.centered {
+    text-align: center;
+}
+td.input {
+    width: 265px
+}
+#result-box {
+    display: none
+}
+#warning {
+    display: none;
+    font-size: 10px;
+    color: red
+}
+button {
+    background: #f4f4f4 -webkit-gradient(linear,left top,left bottom,
+                        color-stop(0, #fafafa),color-stop(1, #ccc));
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    padding: 3px 10px;
+    margin-top: 3px;
     text-shadow: 0 1px #f4f4f4;
 }
-button:active { background: #f4f4f4 -webkit-gradient(
-    linear,
-    left top,
-    left bottom,
-    color-stop(1, #ddd),
-    color-stop(0, #bbb)
-    ) }
+button:active {
+    background: #f4f4f4 -webkit-gradient(linear,left top,left bottom,
+                        color-stop(1, #ddd),color-stop(0, #bbb))
+}
 </style> 
 </head> 
 <body> 
-	
-	<div class="generator"> 
 	<form onsubmit="return fillPassword()"> 
 	<table> 
 	<tr> 
@@ -543,12 +523,14 @@ button:active { background: #f4f4f4 -webkit-gradient(
 		<td class="label">Username</td> 
 		<td class="input"><input type="text" spellcheck="false"  id="username" value=""></td> 
 	</tr>
+    <tr>
 		<td class="label">URL</td> 
 		<td class="input"><input type="text" spellcheck="false"  id="url" value=""></td> 
 	</tr>
     <tr class="length"> 
 		<td class="label">Max Length</td> 
 		<td class="input"><input type="text" id="length" value="25" size="2"> characters 
+
         <button style="float:right; margin-right: -5px" onclick="fillPassword()">&nbsp; <b>Fill</b> &nbsp;</button>
         <button style="float:right" onclick="return generatePassword()">Show</button></td> 
 	</tr> 
@@ -561,17 +543,19 @@ button:active { background: #f4f4f4 -webkit-gradient(
         <input type="text" spellcheck="false" class="centered" id="result" value=""></p> 
         
         <div id="warning"> 
-            <p><b>Warning:</b> Your secret should contain at least 16 chars for better security.</p> 
+            <p><b>Warning:</b> Your secret should contain at least 16 chars
+            for better security.</p>
         </div> 
-        </div>
 	</div> 
 	
 <script>
+(function () {
     chrome.tabs.getSelected(null, function(tab) {
         document.getElementById('url').value = getHostname(tab.url);
     });
     document.getElementById('secret').focus();
- </script>
+})();
+</script>
 	
 </body> 
 </html>
