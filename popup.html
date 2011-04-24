@@ -531,9 +531,11 @@ button:active {
 		<td class="label">Max Length</td> 
 		<td class="input"><input type="text" id="length" value="25" size="2"> characters 
 
-        <button style="float:right; margin-right: -5px" onclick="fillPassword()">&nbsp; <b>Fill</b> &nbsp;</button>
-        <button style="float:right" onclick="return generatePassword()">Show</button></td> 
-	</tr> 
+		<div style="float: right; margin-right: -5px">
+        <button onclick="return generatePassword()">Show</button>
+        <button onclick="fillPassword()">&nbsp; <b>Fill</b> &nbsp;</button>
+		</div>
+	</td></tr> 
 	</table> 
 	</form> 
 
