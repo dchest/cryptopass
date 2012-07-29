@@ -1,9 +1,12 @@
 body {
-    font: 10pt "Lucida Grande", Helvetica, Arial, sans-serif;
-    width: 350px;
-    border-radius: 10px;
-    color: #303942;
-    margin-right: 20px;
+  font: 10pt "Lucida Grande", Helvetica, Arial, sans-serif;
+  width: 350px;
+  border-radius: 10px;
+  color: #303942;
+  margin-right: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
 table {
   margin: 0;
