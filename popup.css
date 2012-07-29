@@ -1,0 +1,96 @@
+body {
+    font: 10pt "Lucida Grande", Helvetica, Arial, sans-serif;
+    width: 350px;
+    border-radius: 10px;
+    color: #303942;
+    margin-right: 20px;
+}
+table {
+  margin: 0;
+  width: 100%;
+}
+.label {
+    text-align: right;
+    padding-right: 5px;
+}
+#secret, #url, #username, #result {
+    width: 100%;
+}
+.length, #length {
+    font-size: 8pt;
+    color: #999;
+}
+.centered {
+    text-align: center;
+}
+#result-box {
+    display: none;
+    text-align: center;
+}
+#warning {
+    display: none;
+    font-size: 10px;
+    color: #cc0011;
+    padding: 3px 0;
+    text-align: center;
+    margin-top: -10px;
+}
+#warning .sign {
+  font-size: 20px;
+  line-height: 0.3;
+  display: inline-block;    
+}
+input {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  padding: 3px 3px;
+  border-radius: 2px;
+  outline: none;
+}
+input:focus {
+  border-color: #4D90FE;
+}
+.buttons {
+  text-align: right;
+}
+button {
+  /*
+    background: #f4f4f4 -webkit-gradient(linear,left top,left bottom,
+                        color-stop(0, #fafafa),color-stop(1, #ccc));
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    padding: 3px 10px;
+    margin-top: 3px;
+    text-shadow: 0 1px #f4f4f4;
+  */
+  background-image: -webkit-linear-gradient(#e8e8e8, #e8e8e8 38%, #d8d8d8);
+  background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  color: black;
+  text-shadow: 0 1px 0 #F0F0F0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  margin: 0 1px 0 0;
+  outline: none;
+}
+button:focus {
+  border-color: #4D90FE;
+}
+button:hover {
+  background-image: -webkit-linear-gradient(#F0F0F0, #F0F0F0 38%, #E0E0E0);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+button:active {
+    /*background: #f4f4f4 -webkit-gradient(linear,left top,left bottom,
+                        color-stop(1, #ddd),color-stop(0, #bbb))
+                        */
+  background-image: none;
+  background-color: rgba(0, 0, 0, 0.15);
+  box-shadow: none;
+}
+.gray {
+  color:#666;
+}
+.working {
+  font-size: 9pt;
+  color: #ccc;
+}
