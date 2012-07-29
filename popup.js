@@ -486,10 +486,32 @@ function fillPassword() {
   return false;
 }
 
+hashColors = ["#CC0000", "#0000CC", "#00CC00", "#CC33CC", "#FF6600", "#66CCCC",
+              "#3399FF", "#CC6666", "#999999"];
+
+function colorPasswordField() {
+    var secretElement = document.querySelector('#secret');
+    var secret = secretElement.value;
+    var color;
+    if (secret.length > 8) {
+        var h = 5381;
+        for (var i = 0; i < secret.length; i++) {
+            h = (((h << 5) + h) + secret.charCodeAt(i)) & 0xffffffff;
+        }
+        color = hashColors[h % hashColors.length];
+    } else {
+        color = "black";
+    }
+    secretElement.style.color = color;
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#main-form').addEventListener('submit', fillPassword);
   document.querySelector('#show-button').addEventListener('click', generatePassword);
   document.querySelector('#fill-button').addEventListener('click', fillPassword);
+  document.querySelector('#secret').addEventListener('keydown', colorPasswordField);
+  document.querySelector('#secret').addEventListener('input', colorPasswordField);
 
   // Put website URL into box.
   chrome.tabs.getCurrent(function(tab) {
