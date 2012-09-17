@@ -444,9 +444,7 @@ function generatePassword(event)
         document.querySelector("#result-box").innerHTML = 
             '<p class="centered">Your password <span class="gray">(copy and paste it)</span>:<br>'+
             '<input type="text" spellcheck="false" class="centered" id="result" value=""></p>'+
-            '<div id="warning">'+
-                '<span class="sign">⚠</span> Secret should contain at least 16 characters for better security.'+
-            '</div>';
+            '<div id="warning">Secret should contain at least 16 characters for better security.</div>';
         var result_field = document.getElementById('result');
         result_field.value = makePassword();
         if (document.querySelector('#secret').value.length < 16)
