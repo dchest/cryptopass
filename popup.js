@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Put website URL into box.
   chrome.tabs.getCurrent(function(tab) {
     chrome.tabs.query({active: true, windowId: chrome.windows.WINDOW_ID_CURRENT}, function(tabs) {
-        document.querySelector('#url').value = getHostname(tabs[0].url);
+        document.querySelector('#url').value = getSignificantDomain(getHostname(tabs[0].url));
       });
   });
 

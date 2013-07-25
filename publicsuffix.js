@@ -1,0 +1,53 @@
+// Matches a domain against the public suffix list and returns
+//  [TLD suffix, significant domain].
+function getMatch(domain) {
+  domain = domain.toLowerCase();
+  var domain_parts = domain.split(".");
+  var match = null;  // (public suffix, significant domain, match length)
+  for (var i = 0; i < public_suffix_list.length; i++) {
+    var rule = public_suffix_list[i];
+    var is_match = true;
+    // Exception rules are preceded by a !
+    var is_exception = rule[0] === "!";
+    if (is_exception) {
+      rule = rule.substr(1);
+    }
+    // Rules are comprised of "parts" that are dot-separated
+    var parts = rule.split(".");
+    for (var j = 0; j < parts.length; j++) {
+      if (parts[parts.length-j-1] !== domain_parts[domain_parts.length-j-1] &&
+          parts[parts.length-j-1] !== "*") {
+        is_match = false;
+        break;
+      }
+    }
+    if (!is_match)
+      continue;
+    // This matches. The meaningful domain is the matched domain plus one
+    // label, unless it's an exception rule in which case it's the entire
+    // rule.
+    if (is_exception) {
+      // Exceptions take precedence, so clear the matches array and stop
+      //  processing.
+      match = [rule, rule, parts.length];
+      break;
+    }
+    else if (match === null ||
+        parts.length > match[2]) {
+      var domain = domain_parts.slice(
+          Math.max(domain_parts.length-parts.length-1, 0)).join(".");
+      match = [rule, domain, parts.length];
+    }
+  }
+  if (match == null)
+    return ["", domain];
+  return match.slice(0, 2);
+}
+
+function getPublicSuffix(domain) {
+  return getMatch(domain)[0];
+}
+
+function getSignificantDomain(domain) {
+  return getMatch(domain)[1];
+}
