@@ -1,41 +1,45 @@
-<!DOCTYPE html> 
- 
-<html lang="en"> 
-<head> 
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
-	<title>CryptoPass</title> 
-	<meta name="author" content="Dmitry Chestnykh"> 
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>CryptoPass</title>
+    <meta name="author" content="Dmitry Chestnykh">
   <script src="publicsuffix.json"></script>
   <script src="publicsuffix.js"></script>
+  <script src="scrypt.js"></script>
   <script src="popup.js"></script>
   <link type="text/css" rel="stylesheet" href="popup.css">
-</head> 
-<body> 
-  <form id="main-form"> 
-    <table> 
-      <tr> 
-        <td class="label">Secret</td> 
-        <td class="input" colspan=2><input type="password" id="secret" value=""></td> 
+</head>
+<body>
+  <form id="main-form">
+    <table>
+      <tr>
+        <td class="label">Secret</td>
+        <td class="input" colspan=2><input type="password" id="secret" value=""/></td>
       </tr>
-      <tr> 
-        <td class="label">Username</td> 
-        <td class="input" colspan=2><input type="text" spellcheck="false"  id="username" value=""></td> 
+      <tr>
+        <td class="label">Username</td>
+        <td class="input" colspan=2><input type="text" spellcheck="false" id="username" value=""/></td>
       </tr>
       <tr colspan=3>
-        <td class="label">URL</td> 
-        <td class="input" colspan=2><input type="text" spellcheck="false"  id="url" value=""></td> 
+        <td class="label">URL</td>
+        <td class="input" colspan=2><input type="text" spellcheck="false" id="url" value=""/></td>
       </tr>
-      <tr class="length"> 
-        <td class="label">Max Length</td> 
-        <td class="input">
-          <input type="text" id="length" value="25" size="2"> characters 
-        </td>
-        <td class="buttons">
-          <button id="fill-button"><b>&nbsp; Fill &nbsp;</b></button>
-          <button id="show-button">Show</button>
-      </td></tr> 
-    </table> 
+      <tr id="options" colspan=2>
+        <td class="label">Salt/Length</td>
+        <td class="input" colspan=2><input type="text" spellcheck="false" id="salt" value=""/>
+          <input size="2" type="text" spellcheck="false" id="length" value=""/></td>
+      </tr>
+      <tr class="buttons">
+        <td>
+        <a href="" id="options-button">*</a>
+        </td><td>
+        <button id="fill-button"><b>&nbsp; Fill &nbsp;</b></button>
+        <button id="show-button">Show</button>
+    </td></tr>
+  </table>
   </form>
-  <div id="result-box"></div> 
-</body> 
+  <div id="result-box"></div>
+</body>
 </html>
