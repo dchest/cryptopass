@@ -1,0 +1,3 @@
+[submodule "scrypt"]
+	path = scrypt
+	url = https://github.com/tonyg/js-scrypt
