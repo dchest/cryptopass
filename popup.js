@@ -65,6 +65,7 @@ function makePassword() {
                              'length':length}, function(){});
     // Cache password.
     sessionState()['secret'] = password;
+
     var r = scrypt.crypto_scrypt(
       scrypt.encode_utf8(password),
       // TODO: is this a safe way to generate salt?
@@ -233,6 +234,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // Get cached password.
   secret = sessionState()['secret'];
   document.getElementById('secret').value = secret == null ? '' : secret;
+  chrome.storage.sync.get({'username':'', 'length':'16', 'salt':''}, function(items){
+    document.getElementById('username').value = items.username;
+    document.getElementById('salt').value = items.salt;
+    document.getElementById('length').value = items.length;
+  });
 
   document.querySelector('#secret').focus();
 });
