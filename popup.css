@@ -26,15 +26,17 @@ table {
     font-size: 8pt;
     color: #999;
 }
-.centered {
-    text-align: center;
+input[type="text"] {
+    font-family: monospace;
+    font-size: 12px;
+}
+.center {
+  text-align: center;
 }
 #result-box {
-    display: none;
     text-align: center;
 }
-#warning {
-    display: none;
+#warning-box {
     font-size: 10px;
     color: #ff0000;
     padding: 3px 0;

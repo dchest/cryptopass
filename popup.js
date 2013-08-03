@@ -71,21 +71,19 @@ function fillFromSyncedStorageElementValue(element_id, default_value) {
 
 // Show a warning to the user.
 function showWarning(warning_string) {
-  document.querySelector('#warning-box').innerHTML =
-    '<span class="warning">' + warning_string + '<span>';
+  document.querySelector('#warning-box').innerHTML = warning_string;
   showDiv('warning-box');
 }
 
 function showPleaseWait() {
-  document.querySelector("#result-box").innerHTML =
-    '<span class="working">Please wait...</span>';
   showDiv('result-box');
+  document.querySelector("#result-box").innerHTML =
+    '<p class="working">Please wait...</p>';
 }
 
 // Special handling of password. We persist the value only in the session
 // state, and persist in sync'ed storage a hash that we can check against.
 function onPasswordChange() {
-  // TODO: do we have to do this in an async setTimeout...?
   setTimeout(function(){
     var password = document.getElementById('password').value;
     addSessionState('password', password);
@@ -97,7 +95,10 @@ function onPasswordChange() {
         // from this hash, we will treat the new hash as the correct hash.
         addSessionState('current_master_password_hash', hash);
         showWarning('Password does not match stored hash.');
-      } else if (items.master_password_hash) {
+      } else {
+        showWarning('');
+      }
+      if (items.master_password_hash) {
         // Forget any old/new hash so we don't save it in settings. Presence of a
         // non-false value for this variable indicates a pending write to the
         // saved settings.
@@ -106,13 +107,7 @@ function onPasswordChange() {
         addSessionState('current_master_password_hash', hash);
       }
     });
-  }, 0);
-}
-
-function showPleaseWait() {
-// TODO
-//  document.querySelector('#result-box').innerHTML = '<span class="working">Please wait..</span>';
-  showDiv('result-box');
+  }, 5);
 }
 
 function stringXor(a, b) {
@@ -149,23 +144,23 @@ function generatePassword(callback) {
 }
 
 function showPassword(event) {
-  showPleaseWait();
   setTimeout(function(){
+    showPleaseWait();
     generatePassword(function(password){
       document.querySelector("#result-box").innerHTML =
-        '<p class="centered">Your password:<br/>' +
-        '<input type="text" spellcheck="false" class="centered" id="result"' +
+        '<p>Your password:<br/>' +
+        '<input type="text" spellcheck="false" class="center" id="result"' +
         'value="' + password + '"/></p>';
       document.getElementById("result").select();
-    })}, 0);
+    })}, 5);
   event.preventDefault();
   event.stopPropagation();
   return false;
 }
 
 function fillPassword(event) {
-  showPleaseWait();
   setTimeout(function(){
+    showPleaseWait();
     generatePassword(function(password){
       document.querySelector("#result-box").innerHTML =
         "<span class='gray'>Done!</span>";
@@ -188,7 +183,7 @@ function fillPassword(event) {
               }
             });
 
-    })}, 0);
+    })}, 5);
   if (event) {
     event.preventDefault();
     event.stopPropagation();
