@@ -1,81 +1,199 @@
-function sessionState() {
+SCRYPT_N = 32768;
+SCRYPT_r = 8;
+SCRYPT_p = 1;
+
+function addSessionState(key, value) {
+  var d = chrome.extension.getBackgroundPage().data;
+  if (!d) {
+    d = {};
+    chrome.extension.getBackgroundPage().data = d;
+  }
+  d[key] = value;
+}
+
+function getSessionState(key, default_value) {
   var d = chrome.extension.getBackgroundPage().data;
   if (d) {
-    return d;
+    return d[key];
   }
-  d = {};
-  chrome.extension.getBackgroundPage().data = d;
-  return d;
+  return default_value;
 }
 
-// Return a checksum that we can use to try to catch typoes.
-function partialHashMasterPassword(password, salt) {
-  // CRC32
-  s = String(password+salt);
-  var polynomial = 0x04C11DB7,
-      initialValue = 0xFFFFFFF,
-      finalXORValue = 0xFFFFFFFF,
-      crc = initialValue,
-      table = [], i, j, c;
- 
-  function reverse(x, n) {
-    var b = 0;
-    while (n) {
-      b = b * 2 + x % 2;
-      x /= 2;
-      x -= x % 1;
-      n--;
-    }
-    return b;
-  }
- 
-  for (i = 255; i >= 0; i--) {
-    c = reverse(i, 32);
- 
-    for (j = 0; j < 8; j++) {
-      c = ((c * 2) ^ (((c >>> 31) % 2) * polynomial)) >>> 0;
-    }
- 
-    table[i] = reverse(c, 32);
-  }
- 
-  for (i = 0; i < s.length; i++) {
-    c = s.charCodeAt(i);
-    if (c > 255) {
-      throw new RangeError();
-    }
-    j = (crc % 256) ^ c;
-    crc = ((crc / 256) ^ table[j]) >>> 0;
-  }
- 
-  // Cut in half, to REALLY make it low entropy. ;) 
-  return btoa((crc ^ finalXORValue) >>> 0).substr(0,6);
+function hashPassword(password, salt, length) {
+  var x = btoa(
+        String.fromCharCode.apply(null, scrypt.crypto_scrypt(
+            scrypt.encode_utf8(password),
+            scrypt.encode_utf8(salt),
+            SCRYPT_N,
+            SCRYPT_r,
+            SCRYPT_p,
+            length)));
+  return x;
 }
 
-function makePassword() {
-    var password = document.getElementById('secret').value;
-    var username = document.getElementById('username').value;
-    var url = document.getElementById('url').value;
-    var length = document.getElementById('length').value;
-    var salt = document.getElementById('salt').value;
+// Return the normalized significant part of the host name of the URL.
+function getSignificantDomain(url) {
+  var l = document.createElement("a");
+  l.href = url;
+  return publicsuffix.getSignificantDomain(l.hostname);
+}
 
-    // Save settings.
-    chrome.storage.sync.set({'username':username,
-                             'salt':salt,
-                             'length':length}, function(){});
-    // Cache password.
-    sessionState()['secret'] = password;
+// Persist the value of an element specified by ID in the synchronized storage.
+function persistInSyncedStorageElementValue(element_id) {
+  return function(event) {
+    var elem = document.getElementById(element_id);
+    if (elem && elem.value) {
+      var v = elem.value;
+      // This is a real hack. Because chrome sync storage doesn't let you
+      // (as far as I can tell) access the keys programmatically--i.e., with
+      // anything other than a string literal--I store all the prefs in a
+      // single 'prefs' dict. Kind of lame, but it makes for shorter code than
+      // duplicating all this persist/restore logic in three different event
+      // handlers.
+      chrome.storage.sync.get({'prefs':{}}, function(items) {
+        items.prefs[element_id] = v;
+        chrome.storage.sync.set({'prefs':items.prefs}, function(){});
+      });
+    }
+    return false;
+  }
+}
 
-    var r = scrypt.crypto_scrypt(
-      scrypt.encode_utf8(password),
-      // TODO: is this a safe way to generate salt?
-      scrypt.encode_utf8(secret + url + username),
-      // Kind of a hack. Generate 2x length because we have to strip out the
-      // non-base62 base64 chars (so to speak).
-      32768, 8, 1, 2*length);
-    return btoa(String.fromCharCode.apply(null, r))
-      .replace(/[^A-Za-z0-9]/gm, '')
-      .substr(0, length);
+// Fill an element specified by ID with the value stored in sync'ed storage.
+function fillFromSyncedStorageElementValue(element_id, default_value) {
+  var elem = document.getElementById(element_id);
+  chrome.storage.sync.get({'prefs':{}},
+    function(items) {
+      var val = items.prefs[element_id]||'';
+      elem.value = val;
+    });
+}
+
+// Show a warning to the user.
+function showWarning(warning_string) {
+  document.querySelector('#warning-box').innerHTML =
+    '<span class="warning">' + warning_string + '<span>';
+  showDiv('warning-box');
+}
+
+function showPleaseWait() {
+  document.querySelector("#result-box").innerHTML =
+    '<span class="working">Please wait...</span>';
+  showDiv('result-box');
+}
+
+// Special handling of password. We persist the value only in the session
+// state, and persist in sync'ed storage a hash that we can check against.
+function onPasswordChange() {
+  // TODO: do we have to do this in an async setTimeout...?
+  setTimeout(function(){
+    var password = document.getElementById('password').value;
+    addSessionState('password', password);
+    chrome.storage.sync.get({'master_password_hash':'', 'salt':'hardcoded_SALT'},
+      function(items) {
+      var hash = hashPassword(password, items.salt, 2);
+      if (items.master_password_hash && items.master_password_hash != hash) {
+        // For now, just save the hash in the session state. If we use a password
+        // from this hash, we will treat the new hash as the correct hash.
+        addSessionState('current_master_password_hash', hash);
+        showWarning('Password does not match stored hash.');
+      } else if (items.master_password_hash) {
+        // Forget any old/new hash so we don't save it in settings. Presence of a
+        // non-false value for this variable indicates a pending write to the
+        // saved settings.
+        addSessionState('current_master_password_hash', false);
+      } else {
+        addSessionState('current_master_password_hash', hash);
+      }
+    });
+  }, 0);
+}
+
+function showPleaseWait() {
+// TODO
+//  document.querySelector('#result-box').innerHTML = '<span class="working">Please wait..</span>';
+  showDiv('result-box');
+}
+
+function stringXor(a, b) {
+  var r = "";
+  var longer = a.length > b.length ? a : b;
+  var shorter = a.length < b.length ? a : b;
+  for (i = 0; i < shorter.length; i++) {
+    r += String.fromCharCode(a.charCodeAt(0) ^ b.charCodeAt(0));
+  }
+  r += longer.substr(shorter.length);
+  return r;
+}
+
+function generatePassword(callback) {
+  var master_password = document.getElementById('password').value;
+  var salt = document.getElementById('salt').value;
+  var username = document.getElementById('username').value;
+  var url = document.getElementById('url').value;
+  var length = document.getElementById('length').value;
+  // Generate password.
+  var password = hashPassword(master_password,
+                              stringXor(salt, stringXor(username, url)),
+                              // Hack: generate a password twice the length
+                              // and remove non-base62 chars, then shorten.
+                              2*length);
+  password = password.replace(/[^A-Za-z0-9]/gm, '').substr(length);
+  callback(password);
+  // And finally, save the new master password hash in the settings, if needed.
+  var current_hash = getSessionState('current_master_password_hash');
+  if (current_hash) {
+    chrome.storage.sync.set({'master_password_hash':current_hash},
+      function(){});
+  }
+}
+
+function showPassword(event) {
+  showPleaseWait();
+  setTimeout(function(){
+    generatePassword(function(password){
+      document.querySelector("#result-box").innerHTML =
+        '<p class="centered">Your password:<br/>' +
+        '<input type="text" spellcheck="false" class="centered" id="result"' +
+        'value="' + password + '"/></p>';
+      document.getElementById("result").select();
+    })}, 0);
+  event.preventDefault();
+  event.stopPropagation();
+  return false;
+}
+
+function fillPassword(event) {
+  showPleaseWait();
+  setTimeout(function(){
+    generatePassword(function(password){
+      document.querySelector("#result-box").innerHTML =
+        "<span class='gray'>Done!</span>";
+      var username = document.getElementById('username').value;
+      chrome.tabs.executeScript(null,
+      {code:'var els = document.getElementsByTagName("input"); ' +
+            'for (var i = 0; i < els.length; i++) { ' +
+            '  if (els[i].type.toLowerCase() == "password") { ' +
+            '    els[i].value = "' + password + '"; ' +
+            '  } else if (els[i].type.toLowerCase() == "text" && ' +
+            '             els[i].name.toLowerCase().match(' +
+            '               /login|username|email|user/)) { ' +
+            '    els[i].value = "' + username + '"; ' +
+            '  } ' +
+            '}'},
+            function(){
+              if (!event) {
+                // This was sent from an 'enter' keypress
+                setTimeout(function(){ window.close(); }, 500);
+              }
+            });
+
+    })}, 0);
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  return false;
 }
 
 function toggleDiv(id)
@@ -87,158 +205,71 @@ function toggleDiv(id)
         infoStyle.display = "block";
 }
 
-function showDiv(id)
-{
-    var infoStyle = document.getElementById(id).style;
-    infoStyle.display = "block";
+function showDiv(id) {
+  var infoStyle = document.getElementById(id).style;
+  infoStyle.display = "block";
 }
 
-function hideDiv(id)
-{
-    var infoStyle = document.getElementById(id).style;
-    infoStyle.display = "none";
+function hideDiv(id) {
+  var infoStyle = document.getElementById(id).style;
+  infoStyle.display = "none";
 }
 
-function getHostname(str) {
-    if (str == null || str == undefined)
-        return "";
-    var re = new RegExp('^(?:f|ht)tp(?:s)?\://(?:www.)?([^/]+)', 'im');
-    var match = str.match(re);
-    if (match != null && match.length > 0)
-        return match[1].toString();
-    else
-        return "";
-}
-
-function showPleaseWait() {
-    document.querySelector("#result-box").innerHTML = "<span class='working'>Please wait...</span>";
-    showDiv('result-box');
-}
-
-function generatePassword(event)
-{
-    showPleaseWait();
-    setTimeout(function() {
-      var masterHash = sessionState()['master_hash'];
-      var secretElement = document.querySelector('#secret');
-      var secret = secretElement.value;
-      var warning = '';
-
-      newHash = partialHashMasterPassword(secret, document.getElementById('salt').value);
-      if (masterHash && masterHash != '' &&
-        newHash != masterHash) {
-        // Hash mismatch--typoed master password!
-        warning = '<div id="warning">Master password hash mismatch! Did you typo?</div>';
-      } else if (secret.length < 8) {
-        warning = '<div id="warning">Secret should contain at least 8 characters for better security.</div>';
-      }
-      // Set the master hash to the new hash, anyway.
-      chrome.storage.sync.set({'master_hash':newHash}, function(){});
-      sessionState()['master_hash'] = newHash;
-      document.querySelector("#result-box").innerHTML = 
-      '<p class="centered">Your password <span class="gray">(copy and paste it)</span>:<br>'+
-      '<input type="text" spellcheck="false" class="centered" id="result" value=""></p>'+
-      warning;
-      var result_field = document.getElementById('result');
-      result_field.value = makePassword();
-      if (warning)
-        showDiv('warning');
-      else
-        hideDiv('warning');
-      result_field.select();
-    }, 60);
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-}
-
-function fillPassword() {
-    showPleaseWait();
-    document.querySelector("#main-form").style.display = "none";
-    setTimeout(function() {
-        var username = document.getElementById('username').value || "";
-        chrome.tabs.executeScript(null,
-            {code:"var els = document.getElementsByTagName('input'); \
-                   for (var i=0; i < els.length; i++) { \
-                     if (els[i].type.toLowerCase() == 'password') { \
-                         els[i].value = '" + makePassword() + "'; \
-                     } else { \
-                         var name = els[i].name.toLowerCase(); \
-                         if (name.match(/login|username|email|user/)) { \
-                           els[i].value = '" + username + "'; \
-                         } \
-                     } \
-                   }"});
-      document.querySelector("#result-box").innerHTML = "<span class='gray'>Done!</span>";
-      setTimeout(function() {
-          window.close();
-      }, 500);
-  }, 50);
-  event.preventDefault();
-  return false;
-}
-
-hashColors = ["#CC0000", "#0000CC", "#00CC00", "#CC33CC", "#FF6600", "#66CCCC",
-              "#3399FF", "#CC6666", "#999999"];
-
-function colorPasswordField() {
-    var secretElement = document.querySelector('#secret');
-    var secret = secretElement.value;
-    var color;
-    if (secret.length > 8) {
-        var h = 5381;
-        for (var i = 0; i < secret.length; i++) {
-            h = (((h << 5) + h) + secret.charCodeAt(i)) & 0xffffffff;
-        }
-        color = hashColors[h % hashColors.length];
-    } else {
-        color = "black";
-    }
-    secretElement.style.color = color;
-}
-
-function showHideOptions() {
-  sessionState()['options_shown'] = !sessionState()['options_shown'];
-  if (sessionState()['options_shown']) {
+function toggleOptions(event) {
+  var s = !getSessionState('options_shown');
+  addSessionState('options_shown', s);
+  if (s) {
     showDiv('options');
   } else {
     hideDiv('options');
   }
+  return false;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  if (!sessionState()['options_shown']) {
-    hideDiv("options");
+  // Hide options on first load
+  if (!getSessionState('options_shown')) {
+    hideDiv('options');
   }
-  document.querySelector('#main-form').addEventListener('keydown', function(e){ if (e.which == 13) { fillPassword(); }});
-  document.querySelector('#show-button').addEventListener('click', generatePassword);
-  document.querySelector('#fill-button').addEventListener('click', fillPassword);
-  document.querySelector('#options-button').addEventListener('click', showHideOptions);
-  document.querySelector('#secret').addEventListener('keydown', colorPasswordField());
-  document.querySelector('#secret').addEventListener('input', colorPasswordField());
+  // Set up event handlers
+  document.querySelector('#main-form').addEventListener('keydown',
+  function(e){
+    if (e.which == 13) {
+      fillPassword();
+    }
+  });
+  document.querySelector('#show-button').addEventListener('click',
+    showPassword);
+  document.querySelector('#fill-button').addEventListener('click',
+    fillPassword);
+  document.querySelector('#options-button').addEventListener('click',
+    toggleOptions);
+  document.querySelector('#password').addEventListener('change',
+    onPasswordChange);
+  document.querySelector('#salt').addEventListener('blur',
+    persistInSyncedStorageElementValue('salt'));
+  document.querySelector('#username').addEventListener('blur',
+    persistInSyncedStorageElementValue('username'));
+  document.querySelector('#length').addEventListener('blur',
+    persistInSyncedStorageElementValue('length'));
 
   // Put website URL into box.
   chrome.tabs.getCurrent(function(tab) {
-    chrome.tabs.query({active: true, windowId: chrome.windows.WINDOW_ID_CURRENT}, function(tabs) {
-        document.querySelector('#url').value = getSignificantDomain(getHostname(tabs[0].url));
+    chrome.tabs.query(
+      {active: true, windowId: chrome.windows.WINDOW_ID_CURRENT},
+      function(tabs) {
+        document.querySelector('#url').value =
+          getSignificantDomain(tabs[0].url);
       });
   });
 
   // Fill settings.
-  chrome.storage.sync.get({'username':'', 'length':'16', 'salt':'', 'master_hash':''}, function(items){
-    document.getElementById('username').value = items.username;
-    document.getElementById('salt').value = items.salt;
-    document.getElementById('length').value = items.length;
-    sessionState()['master_hash'] = items.master_hash;
-  });
-  // Get cached password.
-  secret = sessionState()['secret'];
-  document.getElementById('secret').value = secret == null ? '' : secret;
-  chrome.storage.sync.get({'username':'', 'length':'16', 'salt':''}, function(items){
-    document.getElementById('username').value = items.username;
-    document.getElementById('salt').value = items.salt;
-    document.getElementById('length').value = items.length;
-  });
+  fillFromSyncedStorageElementValue('salt', '');
+  fillFromSyncedStorageElementValue('username', '');
+  fillFromSyncedStorageElementValue('length', '16');
 
-  document.querySelector('#secret').focus();
+  // Get cached password.
+  password = getSessionState('password', '');
+  document.getElementById('password').value = password;
+  document.querySelector('#password').focus();
 });

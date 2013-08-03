@@ -16,8 +16,11 @@ table {
     text-align: right;
     padding-right: 5px;
 }
-#secret, #url, #username, #result {
+#password, #url, #username, #result {
     width: 100%;
+}
+#salt {
+    width: 80%;
 }
 .length, #length {
     font-size: 8pt;
@@ -33,7 +36,7 @@ table {
 #warning {
     display: none;
     font-size: 10px;
-    color: #cc0011;
+    color: #ff0000;
     padding: 3px 0;
     text-align: center;
     margin-top: -10px;
@@ -89,6 +92,5 @@ button:active {
   color:#666;
 }
 .working {
-  font-size: 9pt;
   color: #ccc;
 }
