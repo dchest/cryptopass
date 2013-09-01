@@ -133,7 +133,7 @@ function generatePassword(callback) {
                               // Hack: generate a password twice the length
                               // and remove non-base62 chars, then shorten.
                               2*length);
-  password = password.replace(/[^A-Za-z0-9]/gm, '').substr(length);
+  password = password.replace(/[^A-Za-z0-9]/gm, '').substr(0, length);
   callback(password);
   // And finally, save the new master password hash in the settings, if needed.
   var current_hash = getSessionState('current_master_password_hash');
