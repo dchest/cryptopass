@@ -16,24 +16,29 @@ table {
     text-align: right;
     padding-right: 5px;
 }
-#secret, #url, #username, #result {
+#password, #url, #username, #result {
     width: 100%;
+}
+#salt {
+    width: 80%;
 }
 .length, #length {
     font-size: 8pt;
     color: #999;
 }
-.centered {
-    text-align: center;
+input[type="text"] {
+    font-family: monospace;
+    font-size: 12px;
+}
+.center {
+  text-align: center;
 }
 #result-box {
-    display: none;
     text-align: center;
 }
-#warning {
-    display: none;
+#warning-box {
     font-size: 10px;
-    color: #cc0011;
+    color: #ff0000;
     padding: 3px 0;
     text-align: center;
     margin-top: -10px;
@@ -89,6 +94,5 @@ button:active {
   color:#666;
 }
 .working {
-  font-size: 9pt;
   color: #ccc;
 }
