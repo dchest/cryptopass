@@ -1,6 +1,4 @@
-SCRYPT_N = 32768;
-SCRYPT_r = 8;
-SCRYPT_p = 1;
+PBKDF2_COUNT = 100000;
 
 function addSessionState(key, value) {
   var d = chrome.extension.getBackgroundPage().data;
@@ -20,15 +18,14 @@ function getSessionState(key, default_value) {
 }
 
 function hashPassword(password, salt, length) {
-  var x = btoa(
-        String.fromCharCode.apply(null, scrypt.crypto_scrypt(
-            scrypt.encode_utf8(password),
-            scrypt.encode_utf8(salt),
-            SCRYPT_N,
-            SCRYPT_r,
-            SCRYPT_p,
-            length)));
-  return x;
+  password = sjcl.codec.utf8String.toBits(password);
+  salt = sjcl.codec.utf8String.toBits(salt);
+  var x =
+//      sjcl.misc.pbkdf2(password, salt, PBKDF2_COUNT, length);
+      sjcl.misc.cachedPbkdf2(password,
+        {salt: salt, length: length, iter: PBKDF2_COUNT});
+  x = sjcl.codec.base64.fromBits(x.key);
+  return x.slice(0, length);
 }
 
 // Return the normalized significant part of the host name of the URL.
