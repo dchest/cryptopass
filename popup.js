@@ -818,23 +818,33 @@ function generatePassword(event)
     return false;
 }
 
+
 function fillPassword() {
     showPleaseWait();
     document.querySelector("#main-form").style.display = "none";
     setTimeout(function() {
         var username = document.getElementById('username').value || "";
-        chrome.tabs.executeScript(null,
-            {code:"var els = document.getElementsByTagName('input'); \
-                   for (var i=0; i < els.length; i++) { \
-                     if (els[i].type.toLowerCase() == 'password') { \
-                         els[i].value = '" + makePassword() + "'; \
-                     } else { \
-                         var name = els[i].name.toLowerCase(); \
-                         if (name.match(/login|username|email|user/)) { \
-                           els[i].value = '" + username + "'; \
-                         } \
-                     } \
-                   }"});
+        var password = makePassword();
+        chrome.tabs.executeScript(null, {code:
+            "(function() {                                                                       " +
+            "  var forms = document.forms;                                                       " +
+            "  for (var i = 0; i < forms.length; i++) {                                          " +
+            "    var form = forms[i];                                                            " +
+            "    /* Check that form action domain is the same as document's. */                  " +
+            "    var a = document.createElement('a'); a.href = form.action;                      " +
+            "    if (a.hostname !== document.domain) { continue; } /* skip this form */          " +
+            "    var inputs = form.getElementsByTagName('input');                                " +
+            "    for (var j = 0; j < inputs.length; j++) {                                       " +
+            "      var input = inputs[j];                                                        " +
+            "      if (input.type.toLowerCase() === 'password') {                                " +
+            "        input.value = decodeURIComponent(\"" + encodeURIComponent(password) + "\"); " +
+            "      } else if (input.name.toLowerCase().match(/login|username|email|user/)) {     " +
+            "        input.value = decodeURIComponent(\"" + encodeURIComponent(username) + "\"); " +
+            "      }                                                                             " +
+            "    }                                                                               " +
+            "  }                                                                                 " +
+            "})();                                                                               "
+        });
       document.querySelector("#result-box").innerHTML = "<span class='gray'>Done!</span>";
       setTimeout(function() {
           window.close();

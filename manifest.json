@@ -1,6 +1,6 @@
 {
   "name": "CryptoPass", 
-  "version": "1.9",
+  "version": "1.10",
   "manifest_version": 2,
   "description" : "Generate different passwords from single master password using cryptographically strong method (PBKDF2 with SHA-256).",
   "icons": {
@@ -8,7 +8,7 @@
     "64": "icon_64.png"
   },
   "permissions": [
-    "tabs", "http://*/*", "https://*/*"
+    "activeTab"
   ],
   "browser_action": {
       "default_title": "CryptoPass",
