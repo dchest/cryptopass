@@ -838,7 +838,8 @@ function fillPassword() {
             "      var input = inputs[j];                                                        " +
             "      if (input.type.toLowerCase() === 'password') {                                " +
             "        input.value = decodeURIComponent(\"" + encodeURIComponent(password) + "\"); " +
-            "      } else if (input.name.toLowerCase().match(/login|username|email|user/)) {     " +
+            "      } else if (input.name.toLowerCase().match(/login|username|email|user/)        " +
+            "                 && input.type.toLowerCase().match(/text|email|tel/)) {             " +
             "        input.value = decodeURIComponent(\"" + encodeURIComponent(username) + "\"); " +
             "      }                                                                             " +
             "    }                                                                               " +
