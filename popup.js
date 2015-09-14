@@ -752,8 +752,17 @@ sjcl.codec.base64url = {
 function makePassword() {
 	var secret = document.getElementById('secret').value;
 	var username = document.getElementById('username').value;
+	var orig_url = document.getElementById('original_url').value;
 	var url = document.getElementById('url').value;
 	var length = document.getElementById('length').value;
+
+  // store username, url & length for reuse when visiting the page again
+  // use the original url as the key so that we can update url
+  // use a packed format to save storage space
+  var storage_keys = {};
+  storage_keys[orig_url] = [username, url, length];
+  chrome.storage.sync.set(storage_keys);
+
   var salt = username + '@' + url;
   var binLength = Math.ceil(length/4*3);
   return sjcl.codec.base64.fromBits(sjcl.misc.pbkdf2(secret, salt, 5000, binLength * 8)).substring(0, length);
@@ -885,7 +894,19 @@ document.addEventListener('DOMContentLoaded', function () {
   // Put website URL into box.
   chrome.tabs.getCurrent(function(tab) {
     chrome.tabs.query({active: true, windowId: chrome.windows.WINDOW_ID_CURRENT}, function(tabs) {
-        document.querySelector('#url').value = getHostname(tabs[0].url);
+        var url = getHostname(tabs[0].url);
+        document.querySelector('#url').value = url;
+        document.querySelector('#original_url').value = url;
+
+        // Request the defaults from storage.
+        chrome.storage.sync.get([url], function(data) {
+          if (chrome.runtime.lastError || !data[url])
+            return;
+
+          document.querySelector('#username').value = data[url][0];
+          document.querySelector('#url').value = data[url][1];
+          document.querySelector('#length').value = data[url][2];
+        });
       });
   });
 
